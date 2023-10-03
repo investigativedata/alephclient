@@ -63,7 +63,7 @@ def load_catalog(
             "publisher_url": dataset.get("publisher", {}).get("url"),
             "countries": ensure_list(dataset.get("publisher", {}).get("country")),
             "data_url": dataset.get("data", {}).get("url"),
-            "category": dataset.get("category", "other"),
+            "category": dataset.get("category") or "other",
         }
         if "frequency" in dataset or frequency is not None:
             data["frequency"] = dataset.get("frequency", frequency)
