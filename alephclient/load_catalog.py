@@ -3,7 +3,7 @@ import logging
 from typing import Any, Dict, Generator, List, Optional, Tuple
 
 import requests
-from banal import ensure_list
+from banal import ensure_dict, ensure_list
 
 from alephclient.api import AlephAPI
 
@@ -13,6 +13,14 @@ EntityData = Dict[str, Any]
 Loader = Tuple[str, Generator[EntityData, None, None]]
 
 MIME_TYPE = "application/json+ftm"
+
+
+def ensure_str(value: Any) -> str:
+    if isinstance(value, str):
+        return value.strip()
+    if value:
+        return str(value)
+    return ""
 
 
 def stream_resource(url: str, foreign_id: str) -> Generator[EntityData, None, None]:
@@ -52,17 +60,19 @@ def load_catalog(
             continue
 
         aleph_collection = api.get_collection_by_foreign_id(foreign_id)
+
+        publisher = ensure_dict(dataset.get("publisher"))
+        description = ensure_str(dataset.get("description"))
+        summary = ensure_str(dataset.get("summary"))
+        summary = (description + "\n\n" + summary).strip()
+
         data = {
             "label": dataset["title"],
-            "summary": (
-                dataset.get("description", "")
-                or "" + "\n\n" + dataset.get("summary", "")  # noqa
-                or ""  # noqa
-            ).strip(),
-            "publisher": dataset.get("publisher", {}).get("name"),
-            "publisher_url": dataset.get("publisher", {}).get("url"),
-            "countries": ensure_list(dataset.get("publisher", {}).get("country")),
-            "data_url": dataset.get("data", {}).get("url"),
+            "summary": summary,
+            "publisher": publisher.get("name"),
+            "publisher_url": publisher.get("url"),
+            "countries": ensure_list(publisher.get("country")),
+            "data_url": dataset.get("data_url"),
             "category": dataset.get("category") or "other",
         }
         if "frequency" in dataset or frequency is not None:
