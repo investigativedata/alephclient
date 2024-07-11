@@ -1,7 +1,7 @@
+import importlib.metadata
 import json
 import uuid
 import logging
-import pkg_resources
 from itertools import count
 from pathlib import Path
 from urllib.parse import urlencode, urljoin
@@ -17,7 +17,7 @@ from alephclient.util import backoff, prop_push
 
 log = logging.getLogger(__name__)
 MIME = "application/octet-stream"
-VERSION = pkg_resources.get_distribution("alephclient").version
+VERSION = importlib.metadata.version("alephclient")
 
 
 class APIResultSet(object):
@@ -226,6 +226,11 @@ class AlephAPI(object):
         entity = self._request("GET", url)
         return self._patch_entity(entity, publisher)
 
+    def delete_entity(self, entity_id: str) -> Dict:
+        """Delete a single entity by ID."""
+        url = self._make_url(f"entities/{entity_id}")
+        return self._request("DELETE", url)
+
     def get_collection_by_foreign_id(self, foreign_id: str) -> Optional[Dict]:
         """Get a dict representing a collection based on its foreign ID."""
         if foreign_id is None:
@@ -337,7 +342,7 @@ class AlephAPI(object):
         entityset_id: Optional[str] = None,
         force: bool = False,
         unsafe: bool = False,
-        cleaned: bool = False
+        cleaned: bool = False,
     ):
         for attempt in count(1):
             url = self._make_url(f"collections/{collection_id}/_bulk")

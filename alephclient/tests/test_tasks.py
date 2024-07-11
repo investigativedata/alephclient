@@ -43,6 +43,28 @@ class TestTasks(object):
         res = self.api.write_entity(collection_id, entity)
         assert res["id"] == 24
 
+    def test_delete_entity(self, mocker):
+        mocker.patch.object(self.api, "write_entity", return_value={"id": 24})
+        mocker.patch.object(self.api, "_request")
+        collection_id = 8
+        entity = {
+            "id": 24,
+            "schema": "Article",
+            "properties": {
+                "title": "",
+                "author": "",
+                "publishedAt": "",
+                "bodyText": "",
+            },
+        }
+
+        res = self.api.write_entity(collection_id, entity)
+        assert res["id"] == 24
+        self.api.delete_entity(res["id"])
+        self.api._request.assert_called_once_with(
+            "DELETE", "http://aleph.test/api/2/entities/24"
+        )
+
     def test_ingest(self, mocker):
         mocker.patch.object(self.api, "ingest_upload", return_value={"id": 42})
         mocker.patch.object(
